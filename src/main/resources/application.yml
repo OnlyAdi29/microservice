@@ -1,0 +1,94 @@
+server:
+  port: 8065
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    password: Adi#1234
+    url: jdbc:mysql://localhost:3306/microservices
+    username: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-44670030.okta.com/oauth2/default
+      client:
+        registration:
+          my-internal-client:
+            provider: okta
+            authorization-grant-type: client_credentials
+            scope: internal
+            client-id: 0oa7w65a24Px9Oyms5d7
+            client-secret: Adaqf8TI6YeWCP8YbL4Zjao8kMujqXQ3Z56F7PCFRw2YNOLebN8vO8GGZtDtdOfS
+
+        provider:
+          okta:
+            issuer-uri: https://dev-44670030.okta.com/oauth2/default
+
+  application:
+    name: USER-SERVICE
+
+  config:
+    import: configserver:http://localhost:8069
+
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+  endpoint:
+    health:
+      show-details: always
+
+
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      RatingHotelBreaker:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 6s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+
+  retry:
+    instances:
+      ratingHotelRetry:
+        max-attempts: 3
+        wait-duration: 3s
+
+  ratelimiter:
+    instances:
+      ratingHotelRateLimiter:
+        limit-refresh-period: 4s
+        limit-for-period: 2
+        timeout-duration: 2s
+
+okta:
+  oauth2:
+    issuer: https://dev-44670030.okta.com/oauth2/default
+    audience: api://default
+
+  #eureka:
+   #  instance:
+    #  prefer-ip-address: true
+
+     #client:
+      # fetch-registry: true
+       #register-with-eureka: true
+       #service-url:
+        # defaultZone: http://localhost:8761/eureka
+
